@@ -1,0 +1,8 @@
+results/benchmarks/*.csv
+results/benchmarks/*.json
+results/benchmarks/*-Output.txt
+results/benchmarks/*-Telemetry.csv
+results/inventory/*
+!results/inventory/.gitkeep
+results/screenshots/*
+!results/screenshots/.gitkeep
