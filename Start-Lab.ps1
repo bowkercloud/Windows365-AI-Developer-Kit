@@ -18,6 +18,7 @@
 [CmdletBinding()]
 param(
     [string]$Model = "phi-4-mini",
+    [ValidateRange(1, 100)]
     [int]$BenchmarkRuns = 3,
     [switch]$SkipModelDownload,
     [switch]$SkipBenchmarks,
@@ -26,66 +27,62 @@ param(
 
 $ErrorActionPreference = "Stop"
 $ProgressPreference = "Continue"
+Set-StrictMode -Version Latest
 
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ScriptRoot = Join-Path $Root "scripts"
 $ResultRoot = Join-Path $Root "results"
 
-function Write-Stage {
-    param([string]$Message)
+. (Join-Path $ScriptRoot "Common.ps1")
+
+try {
+    Write-KitHeader
+
+    Write-KitStage "1. Validate the Developer Configuration gallery image"
+    & (Join-Path $ScriptRoot "Test-DeveloperImage.ps1") -OutputPath (Join-Path $ResultRoot "inventory")
+
+    Write-KitStage "2. Install or update Microsoft Foundry Local"
+    & (Join-Path $ScriptRoot "Install-AITooling.ps1")
+
+    if (-not $SkipModelDownload) {
+        Write-KitStage "3. Download model: $Model"
+        Invoke-KitNativeCommand -FilePath "foundry" -ArgumentList @("model", "info", $Model)
+        Invoke-KitNativeCommand -FilePath "foundry" -ArgumentList @("model", "download", $Model)
+    }
+    else {
+        Write-KitStage "3. Model download skipped"
+    }
+
+    Write-KitStage "4. Verify local inference"
+    & (Join-Path $ScriptRoot "Test-LocalInference.ps1") -Model $Model
+
+    if (-not $SkipBenchmarks) {
+        Write-KitStage "5. Run benchmark"
+        & (Join-Path $ScriptRoot "Invoke-Benchmark.ps1") `
+            -Model $Model `
+            -Runs $BenchmarkRuns `
+            -OutputPath (Join-Path $ResultRoot "benchmarks")
+    }
+    else {
+        Write-KitStage "5. Benchmarks skipped"
+    }
+
+    Write-KitStage "6. Lab ready"
+    Write-KitSuccess "Lab ready"
+    Write-Host "Results: $ResultRoot" -ForegroundColor Green
+    Write-Host "Run the interactive model with:" -ForegroundColor Yellow
+    Write-Host "  foundry model run $Model" -ForegroundColor White
     Write-Host ""
-    Write-Host ("=" * 72) -ForegroundColor Cyan
-    Write-Host " $Message" -ForegroundColor Cyan
-    Write-Host ("=" * 72) -ForegroundColor Cyan
+    Write-Host "Screenshot checklist:" -ForegroundColor Yellow
+    Write-Host "  docs\Screenshot-Guide.md" -ForegroundColor White
+
+    if ($OpenScreenshotGuide) {
+        Start-Process (Join-Path $Root "docs\Screenshot-Guide.md")
+    }
+
+    exit 0
 }
-
-Write-Host @"
- __        ___           _                     ____   ____  ____
- \ \      / (_)_ __   __| | _____      _____  |___ \ / ___|| ___|
-  \ \ /\ / /| | '_ \ / _` |/ _ \ \ /\ / / __|   __) | |  _ |___ \
-   \ V  V / | | | | | (_| | (_) \ V  V /\__ \  / __/| |_| | ___) |
-    \_/\_/  |_|_| |_|\__,_|\___/ \_/\_/ |___/ |_____|\____||____/
-
-              Local AI Developer Kit
-"@ -ForegroundColor Green
-
-Write-Stage "1. Validate the Developer Configuration gallery image"
-& (Join-Path $ScriptRoot "Test-DeveloperImage.ps1") -OutputPath (Join-Path $ResultRoot "inventory")
-
-Write-Stage "2. Install or update Microsoft Foundry Local"
-& (Join-Path $ScriptRoot "Install-AITooling.ps1")
-
-if (-not $SkipModelDownload) {
-    Write-Stage "3. Download model: $Model"
-    & foundry model info $Model
-    & foundry model download $Model
-}
-else {
-    Write-Stage "3. Model download skipped"
-}
-
-Write-Stage "4. Verify local inference"
-& (Join-Path $ScriptRoot "Test-LocalInference.ps1") -Model $Model
-
-if (-not $SkipBenchmarks) {
-    Write-Stage "5. Run benchmark"
-    & (Join-Path $ScriptRoot "Invoke-Benchmark.ps1") `
-        -Model $Model `
-        -Runs $BenchmarkRuns `
-        -OutputPath (Join-Path $ResultRoot "benchmarks")
-}
-else {
-    Write-Stage "5. Benchmarks skipped"
-}
-
-Write-Stage "6. Lab ready"
-Write-Host "Results: $ResultRoot" -ForegroundColor Green
-Write-Host "Run the interactive model with:" -ForegroundColor Yellow
-Write-Host "  foundry model run $Model" -ForegroundColor White
-Write-Host ""
-Write-Host "Screenshot checklist:" -ForegroundColor Yellow
-Write-Host "  docs\Screenshot-Guide.md" -ForegroundColor White
-
-if ($OpenScreenshotGuide) {
-    Start-Process (Join-Path $Root "docs\Screenshot-Guide.md")
+catch {
+    Write-Error $_
+    exit 1
 }

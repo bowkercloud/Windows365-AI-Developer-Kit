@@ -1,8 +1,22 @@
 #requires -Version 7.0
+<#
+.SYNOPSIS
+    Opens a workspace for capturing blog screenshots.
+
+.DESCRIPTION
+    Creates the screenshot results folder and opens the key local windows used
+    when documenting a Windows 365 AI Developer Kit run.
+
+.PARAMETER Model
+    Model name shown in the suggested interactive command.
+#>
 [CmdletBinding()]
 param(
     [string]$Model = "phi-4-mini"
 )
+
+$ErrorActionPreference = "Stop"
+Set-StrictMode -Version Latest
 
 $root = Split-Path $PSScriptRoot -Parent
 $guide = Join-Path $root "docs\Screenshot-Guide.md"

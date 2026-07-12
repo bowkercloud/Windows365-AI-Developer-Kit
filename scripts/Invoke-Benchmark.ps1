@@ -14,25 +14,27 @@
 [CmdletBinding()]
 param(
     [string]$Model = "phi-4-mini",
+    [ValidateRange(1, 100)]
     [int]$Runs = 3,
     [string]$Prompt = "Provide five concise practical considerations for running local language models on a Windows 365 Cloud PC.",
     [string]$OutputPath = (Join-Path (Split-Path $PSScriptRoot -Parent) "results\benchmarks")
 )
 
 $ErrorActionPreference = "Stop"
+Set-StrictMode -Version Latest
+
+. (Join-Path $PSScriptRoot "Common.ps1")
+
 New-Item -ItemType Directory -Path $OutputPath -Force | Out-Null
 
 if (-not (Get-Command foundry -ErrorAction SilentlyContinue)) {
     throw "Foundry Local is not installed or not available in PATH."
 }
 
-& foundry model load $Model | Out-Host
+Invoke-KitNativeCommand -FilePath "foundry" -ArgumentList @("model", "load", $Model)
 
 $results = for ($run = 1; $run -le $Runs; $run++) {
     Write-Host "Benchmark run $run of $Runs..." -ForegroundColor Cyan
-
-    $tempInput = Join-Path $env:TEMP "foundry-benchmark-$run.txt"
-    "$Prompt`n/exit`n" | Set-Content $tempInput
 
     $psi = [System.Diagnostics.ProcessStartInfo]::new()
     $psi.FileName = "foundry"
@@ -90,7 +92,6 @@ $results = for ($run = 1; $run -le $Runs; $run++) {
         OutputFile = $outputFile
     }
 
-    Remove-Item $tempInput -ErrorAction SilentlyContinue
     Start-Sleep -Seconds 2
 }
 
