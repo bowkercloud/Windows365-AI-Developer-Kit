@@ -55,9 +55,10 @@ Set-ExecutionPolicy -Scope Process Bypass
 .\Start-Lab.ps1 -BenchmarkRuns 3
 ```
 
-When `-Model` is omitted, the toolkit lists the available chat models and asks
-the user to enter an alias or model ID. For an unattended run, supply the model
-explicitly:
+When `-Model` is omitted, the toolkit lists the available CPU chat model
+variants and asks the user to enter an alias or model ID. Showing variants
+avoids hiding CPU-capable models when Foundry prefers a virtual WebGPU adapter
+for the alias. For an unattended run, supply the model explicitly:
 
 ```powershell
 .\Start-Lab.ps1 -Model phi-4-mini -BenchmarkRuns 3

@@ -110,6 +110,55 @@ function Invoke-KitNativeCommand {
     }
 }
 
+function Invoke-KitNativeCommandInConsole {
+    <#
+    .SYNOPSIS
+        Runs a native command with its output attached directly to the console.
+
+    .DESCRIPTION
+        Avoids routing native output through PowerShell's success pipeline.
+        This preserves UTF-8 symbols and terminal formatting while allowing a
+        caller to return a separate value from the same function.
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        [string]$FilePath,
+
+        [string[]]$ArgumentList = @(),
+
+        [int[]]$SuccessExitCode = @(0)
+    )
+
+    $resolvedCommand = Get-Command $FilePath -CommandType Application -ErrorAction SilentlyContinue |
+        Select-Object -First 1
+    if (-not $resolvedCommand) {
+        throw "Command was not found on PATH: $FilePath"
+    }
+
+    $startInfo = [System.Diagnostics.ProcessStartInfo]::new()
+    $startInfo.FileName = $resolvedCommand.Source
+    $startInfo.UseShellExecute = $false
+
+    foreach ($argument in $ArgumentList) {
+        $startInfo.ArgumentList.Add($argument)
+    }
+
+    $process = [System.Diagnostics.Process]::new()
+    $process.StartInfo = $startInfo
+    try {
+        [void]$process.Start()
+        $process.WaitForExit()
+    }
+    catch {
+        throw "Unable to start command '$FilePath': $($_.Exception.Message)"
+    }
+
+    if ($process.ExitCode -notin $SuccessExitCode) {
+        throw ("Command failed with exit code {0}: {1} {2}" -f $process.ExitCode, $FilePath, ($ArgumentList -join " "))
+    }
+}
+
 function Test-FoundryModernCli {
     <#
     .SYNOPSIS
@@ -218,16 +267,16 @@ function Select-FoundryModel {
         return $Model.Trim()
     }
 
-    Write-Host "Available chat models:" -ForegroundColor Cyan
+    Write-Host "Available CPU chat model variants:" -ForegroundColor Cyan
     if (Test-FoundryModernCli) {
-        Invoke-KitNativeCommand -FilePath "foundry" -ArgumentList @(
-            "model", "list", "--type", "chat"
-        ) | Out-Host
+        Invoke-KitNativeCommandInConsole -FilePath "foundry" -ArgumentList @(
+            "model", "list", "--type", "chat", "--device", "cpu", "--variants"
+        )
     }
     else {
-        Invoke-KitNativeCommand -FilePath "foundry" -ArgumentList @(
-            "model", "list", "--filter", "task=chat-completion"
-        ) | Out-Host
+        Invoke-KitNativeCommandInConsole -FilePath "foundry" -ArgumentList @(
+            "model", "list", "--filter", "device=CPU"
+        )
     }
 
     do {

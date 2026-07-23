@@ -17,9 +17,10 @@ Microsoft describes the 16 vCPU tier as extending CPU-only local AI to larger re
 
 ## Model selection
 
-When no model is supplied, the toolkit lists chat-capable models and prompts
-for an alias or model ID. Foundry Local resolves an alias to the most
-appropriate available variant for the detected hardware.
+When no model is supplied, the toolkit lists CPU chat model variants and
+prompts for an alias or model ID. The explicit CPU variant view is important
+on Cloud PCs where virtual display adapters can cause Foundry Local to prefer
+a WebGPU variant in its default catalogue view.
 
 For example:
 
