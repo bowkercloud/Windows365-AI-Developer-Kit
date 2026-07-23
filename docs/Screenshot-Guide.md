@@ -80,7 +80,7 @@ foundry model list --filter device=CPU
 Capture:
 
 ```powershell
-foundry model show phi-4-mini
+foundry model info phi-4-mini
 ```
 
 ### 10 – Model download

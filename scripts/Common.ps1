@@ -176,10 +176,9 @@ function Get-FoundryModelInfoArguments {
         [string]$Model
     )
 
-    if (Test-FoundryModernCli) {
-        return @("model", "show", $Model)
-    }
-
+    # Model inspection remains "model info" in both CLI generations. The
+    # Foundry Local 0.10.1 release notes listed "model show", but the actual
+    # 0.10.2 command help and parser use "model info".
     return @("model", "info", $Model)
 }
 
