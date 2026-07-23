@@ -249,23 +249,22 @@ function Get-FoundryRunArguments {
     return @("model", "run", $Model)
 }
 
-function Get-FoundryCpuChatVariants {
+function Get-FoundryChatVariants {
     <#
     .SYNOPSIS
-        Returns CPU chat variants from the Foundry Local 0.10 catalogue.
+        Returns chat variants from the Foundry Local 0.10 catalogue.
     #>
     [CmdletBinding()]
     param()
 
     $output = & foundry model list `
         --type chat `
-        --device cpu `
         --variants `
         --output json 2>&1
     $exitCode = $LASTEXITCODE
 
     if ($exitCode -ne 0) {
-        throw ("Unable to read the Foundry Local CPU model catalogue:`n{0}" -f ($output -join [Environment]::NewLine))
+        throw ("Unable to read the Foundry Local model catalogue:`n{0}" -f ($output -join [Environment]::NewLine))
     }
 
     try {
@@ -293,15 +292,14 @@ function Select-FoundryModel {
     )
 
     if (Test-FoundryModernCli) {
-        $variants = @(Get-FoundryCpuChatVariants)
+        $variants = @(Get-FoundryChatVariants)
         if (-not $variants.Count) {
-            throw "Foundry Local did not return any CPU chat model variants."
+            throw "Foundry Local did not return any chat model variants."
         }
 
         if (-not [string]::IsNullOrWhiteSpace($Model)) {
             $requestedModel = $Model.Trim()
             $matchedVariant = $variants | Where-Object {
-                $_.alias -ieq $requestedModel -or
                 $_.variantName -ieq $requestedModel -or
                 $_.variantId -ieq $requestedModel
             } | Select-Object -First 1
@@ -310,15 +308,25 @@ function Select-FoundryModel {
                 return $matchedVariant.variantId
             }
 
-            Write-KitWarning "The supplied model was not found in the CPU chat catalogue. Foundry Local will resolve it as supplied: $requestedModel"
+            $aliasMatches = @($variants | Where-Object { $_.alias -ieq $requestedModel })
+            if ($aliasMatches.Count -eq 1) {
+                return $aliasMatches[0].variantId
+            }
+            if ($aliasMatches.Count -gt 1) {
+                Write-KitWarning "The supplied alias has multiple hardware variants. Foundry Local will choose the preferred variant for this machine: $requestedModel"
+                return $requestedModel
+            }
+
+            Write-KitWarning "The supplied model was not found in the chat catalogue. Foundry Local will resolve it as supplied: $requestedModel"
             return $requestedModel
         }
 
-        Write-Host "Available CPU chat model variants:" -ForegroundColor Cyan
+        Write-Host "Available chat model variants:" -ForegroundColor Cyan
         $numberedVariants = for ($index = 0; $index -lt $variants.Count; $index++) {
             [pscustomobject]@{
                 Number = $index + 1
                 Alias = $variants[$index].alias
+                Device = $variants[$index].device
                 Size = if ($variants[$index].fileSizeMb -ge 1024) {
                     "{0:N1} GB" -f ($variants[$index].fileSizeMb / 1024)
                 }
@@ -332,7 +340,7 @@ function Select-FoundryModel {
         $numberedVariants | Format-Table -AutoSize | Out-Host
 
         do {
-            $selection = (Read-Host "Enter a model number, alias, or CPU model ID").Trim()
+            $selection = (Read-Host "Enter a model number, alias, or model ID").Trim()
             $selectedNumber = 0
             if ([int]::TryParse($selection, [ref]$selectedNumber) -and
                 $selectedNumber -ge 1 -and
@@ -341,7 +349,6 @@ function Select-FoundryModel {
             }
 
             $matchedVariant = $variants | Where-Object {
-                $_.alias -ieq $selection -or
                 $_.variantName -ieq $selection -or
                 $_.variantId -ieq $selection
             } | Select-Object -First 1
@@ -349,7 +356,16 @@ function Select-FoundryModel {
                 return $matchedVariant.variantId
             }
 
-            Write-KitWarning "Select a number from the table or enter a listed CPU alias or model ID."
+            $aliasMatches = @($variants | Where-Object { $_.alias -ieq $selection })
+            if ($aliasMatches.Count -eq 1) {
+                return $aliasMatches[0].variantId
+            }
+            if ($aliasMatches.Count -gt 1) {
+                Write-KitWarning "That alias has multiple hardware variants. Select the numbered CPU, GPU, or NPU row you want to test."
+                continue
+            }
+
+            Write-KitWarning "Select a number from the table or enter a listed model ID."
         } while ($true)
     }
 
@@ -357,9 +373,9 @@ function Select-FoundryModel {
         return $Model.Trim()
     }
 
-    Write-Host "Available CPU models:" -ForegroundColor Cyan
+    Write-Host "Available models:" -ForegroundColor Cyan
     Invoke-KitNativeCommandInConsole -FilePath "foundry" -ArgumentList @(
-        "model", "list", "--filter", "device=CPU"
+        "model", "list"
     )
 
     do {

@@ -55,10 +55,11 @@ Set-ExecutionPolicy -Scope Process Bypass
 .\Start-Lab.ps1 -BenchmarkRuns 3
 ```
 
-When `-Model` is omitted, the toolkit lists the available CPU chat model
-variants and asks the user to select a number, alias or model ID. Aliases are
-resolved to the exact CPU variant ID so Foundry cannot switch back to a virtual
-WebGPU adapter. For an unattended run, supply the model explicitly:
+When `-Model` is omitted, the toolkit lists every available chat model variant
+with its CPU, GPU or NPU device type and asks the user to select a numbered
+row. The exact variant ID is then used throughout the run, so the selected
+hardware target cannot change during download, load, smoke test or benchmark.
+For an unattended run, supply a model alias or exact variant ID:
 
 ```powershell
 .\Start-Lab.ps1 -Model phi-4-mini -BenchmarkRuns 3
