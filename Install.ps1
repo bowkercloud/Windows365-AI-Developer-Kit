@@ -61,7 +61,7 @@ function Write-BootstrapHeader {
     Write-Host ""
     Write-Host "========================================================" -ForegroundColor Cyan
     Write-Host " Windows 365 AI Developer Kit" -ForegroundColor Cyan
-    Write-Host " Community toolkit by Dan Bowker" -ForegroundColor Cyan
+    Write-Host " Community toolkit by Daniel Bowker" -ForegroundColor Cyan
     Write-Host " https://bowker.cloud" -ForegroundColor Cyan
     Write-Host "========================================================" -ForegroundColor Cyan
 }

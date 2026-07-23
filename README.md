@@ -1,6 +1,6 @@
 # Windows 365 AI Developer Kit
 
-Community toolkit by Dan Bowker for building, validating and benchmarking local AI developer environments on Windows 365 Cloud PCs.
+Community toolkit by Daniel Bowker for building, validating and benchmarking local AI developer environments on Windows 365 Cloud PCs.
 
 The toolkit focuses first on CPU-based local language models with Microsoft
 Foundry Local, then expands toward Azure AI Foundry comparisons, reporting,
@@ -56,9 +56,9 @@ Set-ExecutionPolicy -Scope Process Bypass
 ```
 
 When `-Model` is omitted, the toolkit lists the available CPU chat model
-variants and asks the user to enter an alias or model ID. Showing variants
-avoids hiding CPU-capable models when Foundry prefers a virtual WebGPU adapter
-for the alias. For an unattended run, supply the model explicitly:
+variants and asks the user to select a number, alias or model ID. Aliases are
+resolved to the exact CPU variant ID so Foundry cannot switch back to a virtual
+WebGPU adapter. For an unattended run, supply the model explicitly:
 
 ```powershell
 .\Start-Lab.ps1 -Model phi-4-mini -BenchmarkRuns 3

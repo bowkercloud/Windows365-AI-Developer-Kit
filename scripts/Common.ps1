@@ -22,7 +22,7 @@ function Write-KitHeader {
     Write-Host ""
     Write-Host "========================================================" -ForegroundColor Cyan
     Write-Host " Windows 365 AI Developer Kit" -ForegroundColor Cyan
-    Write-Host " Community toolkit by Dan Bowker" -ForegroundColor Cyan
+    Write-Host " Community toolkit by Daniel Bowker" -ForegroundColor Cyan
     Write-Host " https://bowker.cloud" -ForegroundColor Cyan
     Write-Host "========================================================" -ForegroundColor Cyan
 }
@@ -249,6 +249,35 @@ function Get-FoundryRunArguments {
     return @("model", "run", $Model)
 }
 
+function Get-FoundryCpuChatVariants {
+    <#
+    .SYNOPSIS
+        Returns CPU chat variants from the Foundry Local 0.10 catalogue.
+    #>
+    [CmdletBinding()]
+    param()
+
+    $output = & foundry model list `
+        --type chat `
+        --device cpu `
+        --variants `
+        --output json 2>&1
+    $exitCode = $LASTEXITCODE
+
+    if ($exitCode -ne 0) {
+        throw ("Unable to read the Foundry Local CPU model catalogue:`n{0}" -f ($output -join [Environment]::NewLine))
+    }
+
+    try {
+        $catalogue = ($output -join [Environment]::NewLine) | ConvertFrom-Json -ErrorAction Stop
+    }
+    catch {
+        throw "Foundry Local returned invalid model catalogue JSON: $($_.Exception.Message)"
+    }
+
+    return @($catalogue.variants)
+}
+
 function Select-FoundryModel {
     <#
     .SYNOPSIS
@@ -263,21 +292,75 @@ function Select-FoundryModel {
         [string]$Model
     )
 
+    if (Test-FoundryModernCli) {
+        $variants = @(Get-FoundryCpuChatVariants)
+        if (-not $variants.Count) {
+            throw "Foundry Local did not return any CPU chat model variants."
+        }
+
+        if (-not [string]::IsNullOrWhiteSpace($Model)) {
+            $requestedModel = $Model.Trim()
+            $matchedVariant = $variants | Where-Object {
+                $_.alias -ieq $requestedModel -or
+                $_.variantName -ieq $requestedModel -or
+                $_.variantId -ieq $requestedModel
+            } | Select-Object -First 1
+
+            if ($matchedVariant) {
+                return $matchedVariant.variantId
+            }
+
+            Write-KitWarning "The supplied model was not found in the CPU chat catalogue. Foundry Local will resolve it as supplied: $requestedModel"
+            return $requestedModel
+        }
+
+        Write-Host "Available CPU chat model variants:" -ForegroundColor Cyan
+        $numberedVariants = for ($index = 0; $index -lt $variants.Count; $index++) {
+            [pscustomobject]@{
+                Number = $index + 1
+                Alias = $variants[$index].alias
+                Size = if ($variants[$index].fileSizeMb -ge 1024) {
+                    "{0:N1} GB" -f ($variants[$index].fileSizeMb / 1024)
+                }
+                else {
+                    "{0} MB" -f $variants[$index].fileSizeMb
+                }
+                Cached = if ($variants[$index].cached) { "Yes" } else { "No" }
+                ModelId = $variants[$index].variantId
+            }
+        }
+        $numberedVariants | Format-Table -AutoSize | Out-Host
+
+        do {
+            $selection = (Read-Host "Enter a model number, alias, or CPU model ID").Trim()
+            $selectedNumber = 0
+            if ([int]::TryParse($selection, [ref]$selectedNumber) -and
+                $selectedNumber -ge 1 -and
+                $selectedNumber -le $variants.Count) {
+                return $variants[$selectedNumber - 1].variantId
+            }
+
+            $matchedVariant = $variants | Where-Object {
+                $_.alias -ieq $selection -or
+                $_.variantName -ieq $selection -or
+                $_.variantId -ieq $selection
+            } | Select-Object -First 1
+            if ($matchedVariant) {
+                return $matchedVariant.variantId
+            }
+
+            Write-KitWarning "Select a number from the table or enter a listed CPU alias or model ID."
+        } while ($true)
+    }
+
     if (-not [string]::IsNullOrWhiteSpace($Model)) {
         return $Model.Trim()
     }
 
-    Write-Host "Available CPU chat model variants:" -ForegroundColor Cyan
-    if (Test-FoundryModernCli) {
-        Invoke-KitNativeCommandInConsole -FilePath "foundry" -ArgumentList @(
-            "model", "list", "--type", "chat", "--device", "cpu", "--variants"
-        )
-    }
-    else {
-        Invoke-KitNativeCommandInConsole -FilePath "foundry" -ArgumentList @(
-            "model", "list", "--filter", "device=CPU"
-        )
-    }
+    Write-Host "Available CPU models:" -ForegroundColor Cyan
+    Invoke-KitNativeCommandInConsole -FilePath "foundry" -ArgumentList @(
+        "model", "list", "--filter", "device=CPU"
+    )
 
     do {
         $selection = Read-Host "Enter a model alias or ID"

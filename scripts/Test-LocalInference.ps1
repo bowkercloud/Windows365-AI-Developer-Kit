@@ -53,11 +53,13 @@ else {
     $runArguments = Get-FoundryRunArguments -Model $Model
     $response = $inputText | & foundry @runArguments 2>&1
 }
-if ($LASTEXITCODE -ne 0) {
-    throw "Foundry Local smoke test failed with exit code $LASTEXITCODE."
-}
+$exitCode = $LASTEXITCODE
 
 $response | ForEach-Object { Write-Host $_ }
+
+if ($exitCode -ne 0) {
+    throw "Foundry Local smoke test failed with exit code $exitCode. Review the Foundry output above for details."
+}
 
 if (-not $response) {
     throw "No output was returned from the model."
