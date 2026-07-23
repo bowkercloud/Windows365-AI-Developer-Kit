@@ -5,7 +5,7 @@
 
 .DESCRIPTION
     Verifies Foundry Local service status, inspects and loads the requested
-    model, then sends a short prompt through the CLI's interactive mode.
+    model, then sends a short repeatable prompt.
 
 .PARAMETER Model
     Foundry Local model alias or identifier.
@@ -15,7 +15,7 @@
 #>
 [CmdletBinding()]
 param(
-    [string]$Model = "phi-4-mini",
+    [string]$Model,
     [string]$Prompt = "In two concise sentences, explain why a developer might run a language model locally on a Windows 365 Cloud PC."
 )
 
@@ -28,6 +28,8 @@ if (-not (Get-Command foundry -ErrorAction SilentlyContinue)) {
     throw "Foundry Local is not installed or not available in PATH."
 }
 
+$Model = Select-FoundryModel -Model $Model
+
 Write-Host "Foundry Local service:" -ForegroundColor Cyan
 Invoke-KitNativeCommand -FilePath "foundry" -ArgumentList (Get-FoundryStatusArguments)
 
@@ -39,13 +41,18 @@ Write-Host ""
 Write-Host "Loading model..." -ForegroundColor Cyan
 Invoke-KitNativeCommand -FilePath "foundry" -ArgumentList @("model", "load", $Model)
 
-# The CLI's interactive mode is the most stable smoke test while the product is in preview.
-# Pipe a prompt followed by /exit so the test remains repeatable.
 Write-Host ""
 Write-Host "Running smoke-test prompt..." -ForegroundColor Cyan
-$inputText = "$Prompt`n/exit`n"
-$runArguments = Get-FoundryRunArguments -Model $Model
-$response = $inputText | & foundry @runArguments 2>&1
+if (Test-FoundryModernCli) {
+    # The stateless command avoids interactive terminal control sequences in
+    # captured output on Foundry Local 0.10 and later.
+    $response = & foundry complete $Model $Prompt 2>&1
+}
+else {
+    $inputText = "$Prompt`n/exit`n"
+    $runArguments = Get-FoundryRunArguments -Model $Model
+    $response = $inputText | & foundry @runArguments 2>&1
+}
 if ($LASTEXITCODE -ne 0) {
     throw "Foundry Local smoke test failed with exit code $LASTEXITCODE."
 }

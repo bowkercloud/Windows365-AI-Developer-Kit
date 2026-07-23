@@ -62,7 +62,6 @@ Pull requests should include:
 - The Windows 365 / Windows version used for validation.
 - Commands run during testing.
 - Any known limitations, preview-tooling caveats or follow-up work.
-- Screenshots when the change affects user-facing output.
 
 Keep PRs focused. Large roadmap items are easier to review when they are split into installer, validation, benchmarking, reporting or sample-app changes.
 
@@ -73,8 +72,9 @@ Update documentation in the same PR as behaviour changes. At minimum, review:
 - `README.md`
 - `ARCHITECTURE.md`
 - `docs\Lab-Notes.md`
-- `docs\Screenshot-Guide.md`
 
 ## Security
 
-Do not commit tenant names, usernames, access tokens, benchmark output containing sensitive prompts, screenshots with identifying data, or generated inventory from customer environments.
+Do not commit tenant names, usernames, access tokens, benchmark output
+containing sensitive prompts, or generated inventory from customer
+environments.

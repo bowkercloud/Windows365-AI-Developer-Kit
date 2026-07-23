@@ -20,7 +20,8 @@
     Branch to check out when cloning or updating.
 
 .PARAMETER Model
-    Foundry Local model alias to download and benchmark.
+    Foundry Local model alias or identifier to test. When omitted, the user
+    selects a model after Foundry Local is ready.
 
 .PARAMETER BenchmarkRuns
     Number of benchmark runs to perform.
@@ -30,9 +31,6 @@
 
 .PARAMETER SkipBenchmarks
     Skips benchmark execution.
-
-.PARAMETER OpenScreenshotGuide
-    Opens the screenshot guide at the end of the lab.
 
 .EXAMPLE
     irm https://bowker.cloud/w365ai | iex
@@ -46,12 +44,11 @@ param(
     [string]$RepositoryUrl = "https://github.com/bowkercloud/Windows365-AI-Developer-Kit.git",
     [string]$InstallPath = (Join-Path ([Environment]::GetFolderPath("UserProfile")) "source\repos\Windows365-AI-Developer-Kit"),
     [string]$Branch = "main",
-    [string]$Model = "phi-4-mini",
+    [string]$Model,
     [ValidateRange(1, 100)]
     [int]$BenchmarkRuns = 3,
     [switch]$SkipModelDownload,
-    [switch]$SkipBenchmarks,
-    [switch]$OpenScreenshotGuide
+    [switch]$SkipBenchmarks
 )
 
 $ErrorActionPreference = "Stop"
@@ -169,13 +166,10 @@ try {
     }
 
     Write-Host "Launching lab..." -ForegroundColor Cyan
-    $labArguments = @{
-        Model = $Model
-        BenchmarkRuns = $BenchmarkRuns
-    }
+    $labArguments = @{ BenchmarkRuns = $BenchmarkRuns }
+    if (-not [string]::IsNullOrWhiteSpace($Model)) { $labArguments.Model = $Model }
     if ($SkipModelDownload) { $labArguments.SkipModelDownload = $true }
     if ($SkipBenchmarks) { $labArguments.SkipBenchmarks = $true }
-    if ($OpenScreenshotGuide) { $labArguments.OpenScreenshotGuide = $true }
 
     & $startLabPath @labArguments
     exit $LASTEXITCODE

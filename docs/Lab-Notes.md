@@ -15,11 +15,13 @@ This project assumes:
 
 Microsoft describes the 16 vCPU tier as extending CPU-only local AI to larger reasoning and coding models. It remains primarily text-focused and does not provide the image-generation capabilities of GPU Cloud PCs.
 
-## Default model
+## Model selection
 
-The scripts use the `phi-4-mini` alias. Foundry Local resolves an alias to the most appropriate available model variant for the detected hardware.
+When no model is supplied, the toolkit lists chat-capable models and prompts
+for an alias or model ID. Foundry Local resolves an alias to the most
+appropriate available variant for the detected hardware.
 
-To see the exact resolved model:
+For example:
 
 ```powershell
 foundry model info phi-4-mini
@@ -43,4 +45,6 @@ Use the output to document the practical experience on this specific Cloud PC co
 
 ## Preview warning
 
-Both the Developer Configuration gallery image and Foundry Local capabilities discussed in this lab may be in preview. Validate current Microsoft documentation before publishing screenshots or command examples.
+Both the Developer Configuration gallery image and Foundry Local capabilities
+discussed in this lab may be in preview. Validate current Microsoft
+documentation before relying on command examples.

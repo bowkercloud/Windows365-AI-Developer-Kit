@@ -17,12 +17,11 @@
 
 [CmdletBinding()]
 param(
-    [string]$Model = "phi-4-mini",
+    [string]$Model,
     [ValidateRange(1, 100)]
     [int]$BenchmarkRuns = 3,
     [switch]$SkipModelDownload,
-    [switch]$SkipBenchmarks,
-    [switch]$OpenScreenshotGuide
+    [switch]$SkipBenchmarks
 )
 
 $ErrorActionPreference = "Stop"
@@ -44,41 +43,38 @@ try {
     Write-KitStage "2. Install or update Microsoft Foundry Local"
     & (Join-Path $ScriptRoot "Install-AITooling.ps1")
 
+    Write-KitStage "3. Select model"
+    $Model = Select-FoundryModel -Model $Model
+    Write-KitSuccess "Selected model: $Model"
+
     if (-not $SkipModelDownload) {
-        Write-KitStage "3. Download model: $Model"
+        Write-KitStage "4. Download model: $Model"
         Invoke-KitNativeCommand -FilePath "foundry" -ArgumentList (Get-FoundryModelInfoArguments -Model $Model)
         Invoke-KitNativeCommand -FilePath "foundry" -ArgumentList @("model", "download", $Model)
     }
     else {
-        Write-KitStage "3. Model download skipped"
+        Write-KitStage "4. Model download skipped"
     }
 
-    Write-KitStage "4. Verify local inference"
+    Write-KitStage "5. Verify local inference"
     & (Join-Path $ScriptRoot "Test-LocalInference.ps1") -Model $Model
 
     if (-not $SkipBenchmarks) {
-        Write-KitStage "5. Run benchmark"
+        Write-KitStage "6. Run benchmark"
         & (Join-Path $ScriptRoot "Invoke-Benchmark.ps1") `
             -Model $Model `
             -Runs $BenchmarkRuns `
             -OutputPath (Join-Path $ResultRoot "benchmarks")
     }
     else {
-        Write-KitStage "5. Benchmarks skipped"
+        Write-KitStage "6. Benchmarks skipped"
     }
 
-    Write-KitStage "6. Lab ready"
+    Write-KitStage "7. Lab ready"
     Write-KitSuccess "Lab ready"
     Write-Host "Results: $ResultRoot" -ForegroundColor Green
     Write-Host "Run the interactive model with:" -ForegroundColor Yellow
     Write-Host ("  {0}" -f (Format-FoundryCommand -ArgumentList (Get-FoundryRunArguments -Model $Model))) -ForegroundColor White
-    Write-Host ""
-    Write-Host "Screenshot checklist:" -ForegroundColor Yellow
-    Write-Host "  docs\Screenshot-Guide.md" -ForegroundColor White
-
-    if ($OpenScreenshotGuide) {
-        Start-Process (Join-Path $Root "docs\Screenshot-Guide.md")
-    }
 
     exit 0
 }

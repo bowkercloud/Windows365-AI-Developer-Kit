@@ -2,7 +2,9 @@
 
 Community toolkit by Dan Bowker for building, validating and benchmarking local AI developer environments on Windows 365 Cloud PCs.
 
-This project accompanies the technical blog series on [bowker.cloud](https://bowker.cloud). It focuses first on CPU-based local language models with Microsoft Foundry Local, then expands toward Azure AI Foundry comparisons, reporting, sample apps and GPU benchmarking.
+The toolkit focuses first on CPU-based local language models with Microsoft
+Foundry Local, then expands toward Azure AI Foundry comparisons, reporting,
+sample apps and GPU benchmarking.
 
 ## Quick Start
 
@@ -28,7 +30,7 @@ https://raw.githubusercontent.com/bowkercloud/Windows365-AI-Developer-Kit/main/I
 - 16 vCPU / 64 GB Cloud PC
 - PowerShell 7
 - Microsoft Foundry Local
-- `phi-4-mini`
+- User-selected Foundry Local model
 - CPU-based local inference
 
 The Developer Configuration image already includes tools such as Git, PowerShell 7, Python, Node.js, VS Code, WSL Ubuntu and Azure CLI. The toolkit detects and uses those components rather than reinstalling them.
@@ -43,7 +45,6 @@ The Developer Configuration image already includes tools such as Git, PowerShell
 6. Performs a repeatable local inference smoke test.
 7. Runs a basic end-to-end benchmark.
 8. Produces CSV, JSON, Markdown and telemetry output.
-9. Provides a screenshot checklist for blog and documentation evidence.
 
 ## Manual Run
 
@@ -51,7 +52,15 @@ If you have already cloned the repository:
 
 ```powershell
 Set-ExecutionPolicy -Scope Process Bypass
-.\Start-Lab.ps1 -Model phi-4-mini -BenchmarkRuns 3 -OpenScreenshotGuide
+.\Start-Lab.ps1 -BenchmarkRuns 3
+```
+
+When `-Model` is omitted, the toolkit lists the available chat models and asks
+the user to enter an alias or model ID. For an unattended run, supply the model
+explicitly:
+
+```powershell
+.\Start-Lab.ps1 -Model phi-4-mini -BenchmarkRuns 3
 ```
 
 Foundry Local installation may require a new PowerShell session so the `foundry` command is added to `PATH`. If the script returns exit code `3010`, close and reopen PowerShell 7, then run the lab again.
@@ -64,11 +73,12 @@ replacement command surface introduced in Foundry Local CLI 0.10.
 ```powershell
 .\scripts\Test-DeveloperImage.ps1
 .\scripts\Install-AITooling.ps1
-foundry model download phi-4-mini
-.\scripts\Test-LocalInference.ps1 -Model phi-4-mini
-.\scripts\Invoke-Benchmark.ps1 -Model phi-4-mini -Runs 3
-.\scripts\New-ScreenshotWorkspace.ps1 -Model phi-4-mini
+.\scripts\Test-LocalInference.ps1
+.\scripts\Invoke-Benchmark.ps1 -Runs 3
 ```
+
+The inference and benchmark scripts also prompt for a model when `-Model` is
+not supplied.
 
 ## Repository Layout
 
@@ -81,8 +91,7 @@ Windows365-AI-Developer-Kit
 │   ├── Test-DeveloperImage.ps1
 │   ├── Install-AITooling.ps1
 │   ├── Test-LocalInference.ps1
-│   ├── Invoke-Benchmark.ps1
-│   └── New-ScreenshotWorkspace.ps1
+│   └── Invoke-Benchmark.ps1
 ├── docs
 ├── results
 ├── ARCHITECTURE.md
@@ -94,8 +103,7 @@ Generated output is written beneath `results`:
 ```text
 results
 ├── benchmarks
-├── inventory
-└── screenshots
+└── inventory
 ```
 
 ## Roadmap
@@ -105,9 +113,8 @@ results
 - Bootstrap installer
 - Prerequisite validation
 - Foundry Local installation
-- Phi-4 Mini download
+- Interactive model selection and download
 - Benchmark automation
-- Screenshot workspace
 
 ### Version 0.2
 
@@ -133,8 +140,10 @@ results
 - [Architecture](ARCHITECTURE.md)
 - [Contributing](CONTRIBUTING.md)
 - [Lab notes](docs/Lab-Notes.md)
-- [Screenshot guide](docs/Screenshot-Guide.md)
 
 ## Important
 
-This is an early lab version built against preview tooling. Review generated results and command output before publishing. The benchmark intentionally measures the practical end-to-end experience rather than claiming scientific model performance.
+This is an early lab version built against preview tooling. Review generated
+results and command output before relying on them. The benchmark intentionally
+measures the practical end-to-end experience rather than claiming scientific
+model performance.

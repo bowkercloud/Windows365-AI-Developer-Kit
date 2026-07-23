@@ -13,7 +13,7 @@
 #>
 [CmdletBinding()]
 param(
-    [string]$Model = "phi-4-mini",
+    [string]$Model,
     [ValidateRange(1, 100)]
     [int]$Runs = 3,
     [string]$Prompt = "Provide five concise practical considerations for running local language models on a Windows 365 Cloud PC.",
@@ -31,18 +31,25 @@ if (-not (Get-Command foundry -ErrorAction SilentlyContinue)) {
     throw "Foundry Local is not installed or not available in PATH."
 }
 
+$Model = Select-FoundryModel -Model $Model
 Invoke-KitNativeCommand -FilePath "foundry" -ArgumentList @("model", "load", $Model)
-$runArguments = Get-FoundryRunArguments -Model $Model
+$modernCli = Test-FoundryModernCli
+$inferenceArguments = if ($modernCli) {
+    @("complete", $Model, $Prompt)
+}
+else {
+    Get-FoundryRunArguments -Model $Model
+}
 
 $results = for ($run = 1; $run -le $Runs; $run++) {
     Write-Host "Benchmark run $run of $Runs..." -ForegroundColor Cyan
 
     $psi = [System.Diagnostics.ProcessStartInfo]::new()
     $psi.FileName = "foundry"
-    foreach ($argument in $runArguments) {
+    foreach ($argument in $inferenceArguments) {
         $psi.ArgumentList.Add($argument)
     }
-    $psi.RedirectStandardInput = $true
+    $psi.RedirectStandardInput = -not $modernCli
     $psi.RedirectStandardOutput = $true
     $psi.RedirectStandardError = $true
     $psi.UseShellExecute = $false
@@ -54,9 +61,11 @@ $results = for ($run = 1; $run -le $Runs; $run++) {
     $samples = [System.Collections.Generic.List[object]]::new()
     $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
     [void]$process.Start()
-    $process.StandardInput.WriteLine($Prompt)
-    $process.StandardInput.WriteLine("/exit")
-    $process.StandardInput.Close()
+    if (-not $modernCli) {
+        $process.StandardInput.WriteLine($Prompt)
+        $process.StandardInput.WriteLine("/exit")
+        $process.StandardInput.Close()
+    }
 
     while (-not $process.HasExited) {
         $os = Get-CimInstance Win32_OperatingSystem
@@ -107,7 +116,7 @@ $results | ConvertTo-Json -Depth 4 | Set-Content $jsonPath
 $avgTime = [math]::Round(($results.ElapsedSeconds | Measure-Object -Average).Average, 2)
 $avgCpu = [math]::Round(($results.AverageCpuPercent | Measure-Object -Average).Average, 2)
 
-$markdown = @"
+$summary = @"
 # Foundry Local benchmark
 
 - **Captured:** $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
@@ -126,9 +135,9 @@ $(
 )
 "@
 
-$markdown | Set-Content $mdPath
+$summary | Set-Content $mdPath
 
 Write-Host ""
 $results | Format-Table -AutoSize
 Write-Host "Benchmark CSV: $csvPath" -ForegroundColor Green
-Write-Host "Blog-ready Markdown: $mdPath" -ForegroundColor Green
+Write-Host "Benchmark summary: $mdPath" -ForegroundColor Green

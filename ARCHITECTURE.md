@@ -21,7 +21,6 @@ scripts\Common.ps1
         +--> foundry model download
         +--> Test-LocalInference.ps1
         +--> Invoke-Benchmark.ps1
-        +--> New-ScreenshotWorkspace.ps1
         |
         v
 results\
@@ -54,10 +53,11 @@ Responsibilities:
 - Print the toolkit banner.
 - Run prerequisite inventory.
 - Install or update Foundry Local.
+- Prompt for a model when one was not supplied.
 - Download the selected model unless skipped.
 - Run local inference validation.
 - Run benchmarks unless skipped.
-- Point the user to generated results and screenshot guidance.
+- Point the user to generated results.
 
 ## Shared Helpers
 
@@ -78,7 +78,6 @@ Each stage script should be independently runnable:
 - `Install-AITooling.ps1` installs or updates Microsoft Foundry Local through WinGet.
 - `Test-LocalInference.ps1` runs a Foundry Local smoke test.
 - `Invoke-Benchmark.ps1` runs repeatable end-to-end prompt benchmarks and writes CSV, JSON, Markdown and telemetry output.
-- `New-ScreenshotWorkspace.ps1` opens a safe workspace for manual screenshot capture.
 
 ## Results
 
@@ -87,8 +86,7 @@ Generated files live under `results` and should not be committed except for `.gi
 ```text
 results
 ├── benchmarks
-├── inventory
-└── screenshots
+└── inventory
 ```
 
 ## Future Direction

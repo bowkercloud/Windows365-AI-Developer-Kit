@@ -200,6 +200,43 @@ function Get-FoundryRunArguments {
     return @("model", "run", $Model)
 }
 
+function Select-FoundryModel {
+    <#
+    .SYNOPSIS
+        Resolves a supplied model or prompts the user to select one.
+
+    .DESCRIPTION
+        Displays chat-capable models when no model was supplied, then asks for
+        an alias or model ID. Supplying -Model keeps automation non-interactive.
+    #>
+    [CmdletBinding()]
+    param(
+        [string]$Model
+    )
+
+    if (-not [string]::IsNullOrWhiteSpace($Model)) {
+        return $Model.Trim()
+    }
+
+    Write-Host "Available chat models:" -ForegroundColor Cyan
+    if (Test-FoundryModernCli) {
+        Invoke-KitNativeCommand -FilePath "foundry" -ArgumentList @(
+            "model", "list", "--type", "chat"
+        ) | Out-Host
+    }
+    else {
+        Invoke-KitNativeCommand -FilePath "foundry" -ArgumentList @(
+            "model", "list", "--filter", "task=chat-completion"
+        ) | Out-Host
+    }
+
+    do {
+        $selection = Read-Host "Enter a model alias or ID"
+    } while ([string]::IsNullOrWhiteSpace($selection))
+
+    return $selection.Trim()
+}
+
 function Format-FoundryCommand {
     <#
     .SYNOPSIS
