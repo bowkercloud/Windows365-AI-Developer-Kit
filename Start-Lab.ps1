@@ -46,7 +46,7 @@ try {
 
     if (-not $SkipModelDownload) {
         Write-KitStage "3. Download model: $Model"
-        Invoke-KitNativeCommand -FilePath "foundry" -ArgumentList @("model", "info", $Model)
+        Invoke-KitNativeCommand -FilePath "foundry" -ArgumentList (Get-FoundryModelInfoArguments -Model $Model)
         Invoke-KitNativeCommand -FilePath "foundry" -ArgumentList @("model", "download", $Model)
     }
     else {
@@ -71,7 +71,7 @@ try {
     Write-KitSuccess "Lab ready"
     Write-Host "Results: $ResultRoot" -ForegroundColor Green
     Write-Host "Run the interactive model with:" -ForegroundColor Yellow
-    Write-Host "  foundry model run $Model" -ForegroundColor White
+    Write-Host ("  {0}" -f (Format-FoundryCommand -ArgumentList (Get-FoundryRunArguments -Model $Model))) -ForegroundColor White
     Write-Host ""
     Write-Host "Screenshot checklist:" -ForegroundColor Yellow
     Write-Host "  docs\Screenshot-Guide.md" -ForegroundColor White

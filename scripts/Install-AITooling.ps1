@@ -81,11 +81,11 @@ if (-not (Get-Command foundry -ErrorAction SilentlyContinue)) {
 Invoke-KitNativeCommand -FilePath "foundry" -ArgumentList @("--version")
 
 try {
-    Invoke-KitNativeCommand -FilePath "foundry" -ArgumentList @("service", "status")
+    Invoke-KitNativeCommand -FilePath "foundry" -ArgumentList (Get-FoundryStatusArguments)
 }
 catch {
-    Write-Warning "Foundry Local service did not respond. Restarting it."
-    Invoke-KitNativeCommand -FilePath "foundry" -ArgumentList @("service", "restart")
+    Write-Warning "Foundry Local did not respond. Restarting it."
+    Invoke-KitNativeCommand -FilePath "foundry" -ArgumentList (Get-FoundryRestartArguments)
     Start-Sleep -Seconds 3
-    Invoke-KitNativeCommand -FilePath "foundry" -ArgumentList @("service", "status")
+    Invoke-KitNativeCommand -FilePath "foundry" -ArgumentList (Get-FoundryStatusArguments)
 }

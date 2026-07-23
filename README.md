@@ -56,6 +56,9 @@ Set-ExecutionPolicy -Scope Process Bypass
 
 Foundry Local installation may require a new PowerShell session so the `foundry` command is added to `PATH`. If the script returns exit code `3010`, close and reopen PowerShell 7, then run the lab again.
 
+The toolkit detects both the earlier service-based Foundry Local CLI and the
+replacement command surface introduced in Foundry Local CLI 0.10.
+
 ## Run Individual Stages
 
 ```powershell

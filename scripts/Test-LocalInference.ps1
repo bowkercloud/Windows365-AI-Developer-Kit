@@ -29,11 +29,11 @@ if (-not (Get-Command foundry -ErrorAction SilentlyContinue)) {
 }
 
 Write-Host "Foundry Local service:" -ForegroundColor Cyan
-Invoke-KitNativeCommand -FilePath "foundry" -ArgumentList @("service", "status")
+Invoke-KitNativeCommand -FilePath "foundry" -ArgumentList (Get-FoundryStatusArguments)
 
 Write-Host ""
 Write-Host "Model information:" -ForegroundColor Cyan
-Invoke-KitNativeCommand -FilePath "foundry" -ArgumentList @("model", "info", $Model)
+Invoke-KitNativeCommand -FilePath "foundry" -ArgumentList (Get-FoundryModelInfoArguments -Model $Model)
 
 Write-Host ""
 Write-Host "Loading model..." -ForegroundColor Cyan
@@ -44,7 +44,8 @@ Invoke-KitNativeCommand -FilePath "foundry" -ArgumentList @("model", "load", $Mo
 Write-Host ""
 Write-Host "Running smoke-test prompt..." -ForegroundColor Cyan
 $inputText = "$Prompt`n/exit`n"
-$response = $inputText | & foundry model run $Model 2>&1
+$runArguments = Get-FoundryRunArguments -Model $Model
+$response = $inputText | & foundry @runArguments 2>&1
 if ($LASTEXITCODE -ne 0) {
     throw "Foundry Local smoke test failed with exit code $LASTEXITCODE."
 }

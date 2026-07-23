@@ -19,11 +19,14 @@ Microsoft describes the 16 vCPU tier as extending CPU-only local AI to larger re
 
 The scripts use the `phi-4-mini` alias. Foundry Local resolves an alias to the most appropriate available model variant for the detected hardware.
 
-To see the exact resolved model:
+To see the exact resolved model with Foundry Local CLI 0.10 or later:
 
 ```powershell
-foundry model info phi-4-mini
+foundry model show phi-4-mini
 ```
+
+The toolkit automatically maps this and other commands when an earlier
+service-based Foundry Local CLI is installed.
 
 ## Benchmark interpretation
 

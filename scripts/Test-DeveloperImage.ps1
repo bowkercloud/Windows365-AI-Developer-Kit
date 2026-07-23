@@ -92,7 +92,7 @@ function Invoke-InventoryCommand {
 }
 
 $tools = @(
-    Get-ToolResult -Name "PowerShell 7" -Command "pwsh" -Arguments @("-NoLogo","-Command","$PSVersionTable.PSVersion.ToString()")
+    Get-ToolResult -Name "PowerShell 7" -Command "pwsh" -Arguments @("-NoLogo", "-Command", '$PSVersionTable.PSVersion.ToString()')
     Get-ToolResult -Name "Visual Studio Code" -Command "code"
     Get-ToolResult -Name "WSL" -Command "wsl.exe" -Arguments @("--version")
     Get-ToolResult -Name "Python" -Command "python"

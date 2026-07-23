@@ -80,7 +80,7 @@ foundry model list --filter device=CPU
 Capture:
 
 ```powershell
-foundry model info phi-4-mini
+foundry model show phi-4-mini
 ```
 
 ### 10 – Model download
@@ -96,7 +96,7 @@ foundry model download phi-4-mini
 Capture:
 
 ```powershell
-foundry service status
+foundry status
 foundry cache list
 ```
 
@@ -107,7 +107,7 @@ foundry cache list
 Run:
 
 ```powershell
-foundry model run phi-4-mini
+foundry run phi-4-mini
 ```
 
 Suggested prompt:

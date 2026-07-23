@@ -32,15 +32,16 @@ if (-not (Get-Command foundry -ErrorAction SilentlyContinue)) {
 }
 
 Invoke-KitNativeCommand -FilePath "foundry" -ArgumentList @("model", "load", $Model)
+$runArguments = Get-FoundryRunArguments -Model $Model
 
 $results = for ($run = 1; $run -le $Runs; $run++) {
     Write-Host "Benchmark run $run of $Runs..." -ForegroundColor Cyan
 
     $psi = [System.Diagnostics.ProcessStartInfo]::new()
     $psi.FileName = "foundry"
-    $psi.ArgumentList.Add("model")
-    $psi.ArgumentList.Add("run")
-    $psi.ArgumentList.Add($Model)
+    foreach ($argument in $runArguments) {
+        $psi.ArgumentList.Add($argument)
+    }
     $psi.RedirectStandardInput = $true
     $psi.RedirectStandardOutput = $true
     $psi.RedirectStandardError = $true
