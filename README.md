@@ -1,10 +1,12 @@
 # Windows 365 AI Developer Kit
 
-Community toolkit by Daniel Bowker for building, validating and benchmarking local AI developer environments on Windows 365 Cloud PCs.
+Community toolkit for building, validating and benchmarking local AI developer environments on Windows 365 Cloud PCs.
 
 The toolkit focuses first on CPU-based local language models with Microsoft
 Foundry Local, then expands toward Azure AI Foundry comparisons, reporting,
 sample apps and GPU benchmarking.
+
+Built and maintained by [Daniel Bowker](https://bowker.cloud) - Microsoft MVP for Windows 365.
 
 ## Quick Start
 
@@ -149,3 +151,5 @@ This is an early lab version built against preview tooling. Review generated
 results and command output before relying on them. The benchmark intentionally
 measures the practical end-to-end experience rather than claiming scientific
 model performance.
+
+*[bowker.cloud](https://bowker.cloud) - Cutting Through the Endpoint Chaos*
